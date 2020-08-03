@@ -19,20 +19,88 @@ class MC_UE4_API USimplexNoiseGenerator : public UObject
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY()
-	double xo;
-	double yo;
-	double zo;
+	double m_xo;
+	double m_yo;
+	double m_zo;
 private:
-	int **m_gradients;
+	const int8_t m_gradients[16][3] = {
+		{1, 1, 0},
+		{-1, 1, 0},
+		{1, -1, 0},
+		{-1, -1, 0},
+		{1, 0, 1},
+		{-1, 0, 1},
+		{1, 0, -1},
+		{-1, 0, -1},
+		{0, 1, 1},
+		{0, -1, 1},
+		{0, 1, -1},
+		{0, -1, -1},
+		{1, 1, 0},
+		{0, -1, 1},
+		{-1, 1, 0},
+		{0, -1, -1}
+	};
 	const double F2 = 0.5 * (__SIMPLEX_SQRT_3 - 1.0);
 	const double G2 = (3.0 - __SIMPLEX_SQRT_3) / 6.0;
-	int m_randoms[512];
+	int32_t m_randoms[512];
 
 public:
 	USimplexNoiseGenerator();
-	void Init(UJavaRandom &seed);
+
+	/**
+	 * @brief Initialize this generator with a seed.
+	 *
+	 * Perform the initialization step for this generator with a given seed.
+	 *
+	 * @param seed Seed used to initialize.
+	 */
+	void Init(UJavaRandom& seed);
+
+	/**
+	 * @brief Get noise value for two dimensional coordinate.
+	 * 
+	 * @param x X coordinate.
+	 * @param y Y coordinate.
+	 * @return double Value betweeen 0 and 1.
+	 */
+	double GetValue(double x, double y);
+
+	/**
+	 * @brief Get noise value for three dimensional coordinate.
+	 *
+	 * See https://en.wikipedia.org/wiki/Simplex_noise for more information on the
+	 * purpose of this function.
+	 *
+	 * @param x X coordinate.
+	 * @param y Y coordinate.
+	 * @param z Z coordinate.
+	 * @return double Value between 0 and 1.
+	 */
+	double GetValue(double x, double y, double z);
+
+protected:
+	/**
+	 * Process a gradient.
+	 *
+	 * @param gradElement Gradient values to use.
+	 * @param xFactor X factor to be processed with corresponding gradient.
+	 * @param yFactor Y factor to be processed with corresponding gradient.
+	 * @param zFactor Z factor to be processed with corresponding gradient.
+	 * @return double
+	 */
+	static double ProcessGrad(
+		const int8_t gradElement[3],
+		double xFactor,
+		double yFactor,
+		double zFactor
+	);
 
 private:
-	int getPermutValue(int permutIndex);
+	int GetPermutValue(int permutIndex);
+	double GetContrib(int gradIndex, double x, double y, double z, double offset);
+
+	friend class FSimplexNoiseGeneratorTestInit;
+	friend class FSimplexNoiseGeneratorTestProcessGrad;
+	friend class FSimplexNoiseGeneratorTestGetPermutValue;
 };
