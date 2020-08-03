@@ -2,9 +2,9 @@
 
 #pragma once
 
-
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "../../JavaPort/JavaRandom.h"
 #include "SimplexNoiseGenerator.generated.h"
 
 #define __SIMPLEX_SQRT_3 ((double)1.73205080757)
@@ -31,7 +31,7 @@ private:
 
 public:
 	USimplexNoiseGenerator();
-	void init(FRandomStream &seed);
+	void Init(UJavaRandom &seed);
 
 private:
 	int getPermutValue(int permutIndex);

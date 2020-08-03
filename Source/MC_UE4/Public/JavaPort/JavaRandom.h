@@ -17,7 +17,7 @@ class MC_UE4_API UJavaRandom : public UObject
 	GENERATED_BODY()
 
 private:
-	int64_t m_seed;
+	TAtomic<int64_t> m_seed;
 	bool m_haveNextNextGaussian;
 
 	const int64_t m_seedUniquifier = 8682522807148012L;
@@ -28,9 +28,15 @@ private:
 public:
 	UJavaRandom();
 	~UJavaRandom();
-
 	void SetSeed(int64_t seed);
+	int64_t Next(int bits);
+	int32_t NextInt();
+	int32_t NextInt(unsigned int bound);
+	double NextDouble();
 
 private:
-	int64_t InitialScrable(int64_t seed);
+	int64_t InitialScramble(int64_t seed);
+
+	friend class FJavaRandomNextTestPositive1Seed;
+	friend class FJavaRandomNextTestNegative1Seed;
 };

@@ -27,7 +27,7 @@ USimplexNoiseGenerator::USimplexNoiseGenerator()
     m_gradients = (int**)gradients;
 }
 
-void USimplexNoiseGenerator::init(FRandomStream &seed)
+void USimplexNoiseGenerator::Init(UJavaRandom &seed)
 {
 }
 
