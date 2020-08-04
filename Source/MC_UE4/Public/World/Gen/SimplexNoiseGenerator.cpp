@@ -7,6 +7,21 @@ USimplexNoiseGenerator::USimplexNoiseGenerator()
 {
 }
 
+double USimplexNoiseGenerator::XO()
+{
+    return m_xo;
+}
+
+double USimplexNoiseGenerator::YO()
+{
+    return m_yo;
+}
+
+double USimplexNoiseGenerator::ZO()
+{
+    return m_zo;
+}
+
 void USimplexNoiseGenerator::Init(UJavaRandom &seed)
 {
     m_xo = seed.NextDouble() * 256.0;

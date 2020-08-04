@@ -18,10 +18,6 @@ UCLASS()
 class MC_UE4_API USimplexNoiseGenerator : public UObject
 {
 	GENERATED_BODY()
-public:
-	double m_xo;
-	double m_yo;
-	double m_zo;
 private:
 	const int8_t m_gradients[16][3] = {
 		{1, 1, 0},
@@ -44,9 +40,33 @@ private:
 	const double F2 = 0.5 * (__SIMPLEX_SQRT_3 - 1.0);
 	const double G2 = (3.0 - __SIMPLEX_SQRT_3) / 6.0;
 	int32_t m_randoms[512];
+	double m_xo;
+	double m_yo;
+	double m_zo;
 
 public:
 	USimplexNoiseGenerator();
+
+	/**
+	 * @brief Get the XO value for this generator.
+	 * 
+	 * @return double 
+	 */
+	double XO();
+
+	/**
+	 * @brief Get the YO value for this generator.
+	 * 
+	 * @return double 
+	 */
+	double YO();
+
+	/**
+	 * @brief Get the ZO value for this generator.
+	 * 
+	 * @return double 
+	 */
+	double ZO();
 
 	/**
 	 * @brief Initialize this generator with a seed.
