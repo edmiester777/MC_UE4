@@ -18,11 +18,11 @@ void UJavaRandom::SetSeed(int64_t seed)
     // haveNextNextGaussian???
 }
 
-int64_t UJavaRandom::Next(int bits)
+int32_t UJavaRandom::Next(int bits)
 {
     int64_t nextSeed = (m_seed * m_multiplier + m_addend) & m_mask;
     m_seed = nextSeed;
-    return nextSeed >> (48 - bits);
+    return (int32_t)(nextSeed >> (48 - bits));
 }
 
 int32_t UJavaRandom::NextInt()
@@ -47,8 +47,16 @@ int32_t UJavaRandom::NextInt(unsigned int bound)
 
 double UJavaRandom::NextDouble()
 {
-    uint64_t nextVal = (Next(26) << 27) + (Next(27));
-    return nextVal * m_double_unit;
+    uint64_t first = Next(26);
+    uint64_t second = Next(27);
+    return (double)((first << 27) + second) * m_double_unit;
+}
+
+int64_t UJavaRandom::NextLong()
+{
+    int64_t first = Next(32);
+    int64_t second = Next(32);
+    return (first << 32) + second;
 }
 
 int64_t UJavaRandom::InitialScramble(int64_t seed)

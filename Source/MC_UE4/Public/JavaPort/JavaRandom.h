@@ -27,12 +27,13 @@ private:
 	const double m_double_unit = 1.0 / (((int64_t)1L) << 53);
 public:
 	UJavaRandom();
-	~UJavaRandom();
-	void SetSeed(int64_t seed);
-	int64_t Next(int bits);
-	int32_t NextInt();
-	int32_t NextInt(unsigned int bound);
-	double NextDouble();
+	virtual ~UJavaRandom();
+	virtual void SetSeed(int64_t seed);
+	virtual int32_t Next(int bits);
+	virtual int32_t NextInt();
+	virtual int32_t NextInt(unsigned int bound);
+	virtual double NextDouble();
+	virtual int64_t NextLong();
 
 private:
 	int64_t InitialScramble(int64_t seed);

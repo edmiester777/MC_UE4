@@ -3,6 +3,7 @@
 
 #include "CoreMinimal.h"
 #include <JavaPort/JavaRandom.h>
+#include <bitset>
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomNextTestPositive1Seed, "MC_UE4.JavaPort.Random Next Test From Positive 1 Seed", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FJavaRandomNextTestPositive1Seed::RunTest(const FString& Parameters)
@@ -125,7 +126,7 @@ bool FJavaRandomTestNextIntBoundsPositive1Seed::RunTest(const FString& Parameter
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextDoublePositive1Seed, "MC_UE4.JavaPort.RandomTest Next Double From Positive 1 Seed", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextDoublePositive1Seed, "MC_UE4.JavaPort.Random Test Next Double From Positive 1 Seed", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FJavaRandomTestNextDoublePositive1Seed::RunTest(const FString& Parameters)
 {
     // expected result from NextDouble if seed is 1
@@ -144,6 +145,31 @@ bool FJavaRandomTestNextDoublePositive1Seed::RunTest(const FString& Parameters)
     for(int i = 0; i < NUM_RESULTS; ++i)
     {
         double result = random->NextDouble();
+        TestEqual(TEXT("Result ") + FString::FromInt(i + 1), result, expectedResults[i]);
+    }
+
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextLongPositive1Seed, "MC_UE4.JavaPort.Random Test Next Long From Positive 1 Seed", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FJavaRandomTestNextLongPositive1Seed::RunTest(const FString& Parameters)
+{
+    // expected result from NextDouble if seed is 1
+    const int NUM_RESULTS = 5;
+    int64_t expectedResults[] = {
+        -4964420948893066024,
+        7564655870752979346,
+        3831662765844904176,
+        6137546356583794141,
+        -594798593157429144
+    };
+
+    UJavaRandom* random = NewObject<UJavaRandom>();
+    random->SetSeed(1);
+
+    for (int i = 0; i < NUM_RESULTS; ++i)
+    {
+        int64_t result = random->NextLong();
         TestEqual(TEXT("Result ") + FString::FromInt(i + 1), result, expectedResults[i]);
     }
 
