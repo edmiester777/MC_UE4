@@ -1,0 +1,3 @@
+[submodule "third-party/mcp-reborn"]
+	path = third-party/mcp-reborn
+	url = https://github.com/Hexeption/MCP-Reborn.git

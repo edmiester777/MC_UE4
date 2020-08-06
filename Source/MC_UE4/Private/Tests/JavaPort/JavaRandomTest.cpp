@@ -4,148 +4,159 @@
 #include "CoreMinimal.h"
 #include <JavaPort/JavaRandom.h>
 #include <bitset>
+#include <Tests/JavaTestUtil.h>
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomNextTestPositive1Seed, "MC_UE4.JavaPort.Random Next Test From Positive 1 Seed", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
-bool FJavaRandomNextTestPositive1Seed::RunTest(const FString& Parameters)
+#define NUM_SAMPLES 1000
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomNextTest, "MC_UE4.JavaPort.Random Next Test", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FJavaRandomNextTest::RunTest(const FString& Parameters)
 {
-    const int NUM_RESULTS = 5;
-    const int NUM_BITS = 27;
-    int64_t expectedSeeds[] = {
-        25214903916,
-        205723924636679,
-        28280696119558,
-        115427488297881,
-        114684108877360
-    };
-    int64_t expectedResults[] = {
-        98096811,
-        13485286,
-        55040115,
-        54685644,
-        27879015
-    };
+    // Getting java definitions
+    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
+    jclass randomCls = env->FindClass("java/util/Random");
+    jmethodID randomCtor = env->GetMethodID(randomCls, "<init>", "(J)V");
+    jmethodID nextMethod = env->GetMethodID(randomCls, "next", "(I)I");
 
-    UJavaRandom* random = NewObject<UJavaRandom>();
-    random->SetSeed(1);
+    // comparing results from various seeds
+    for(int i = 0; i < NUM_SAMPLES; ++i) {
+        // getting random seed value
+        int seed = rand();
 
-    for(int i = 0; i < NUM_RESULTS; ++i)
-    {
-        TestEqual("Seed " + FString::FromInt(i + 1), (long long)random->m_seed, (long long)expectedSeeds[i]);
-        int64_t result = random->Next(NUM_BITS);
-        TestEqual(TEXT("Result ") + FString::FromInt(i + 1), (long long)result, (long long)expectedResults[i]);
+        // constructing java and unreal versions of random class
+        jobject jrandom = env->NewObject(randomCls, randomCtor, (jlong)seed);
+        UJavaRandom* random = NewObject<UJavaRandom>();
+        random->SetSeed((int64_t)seed);
+
+        // testing results under subsequent calls
+        for(int j = 0; j < 10; ++j)
+        {
+            // getting result of java random
+            int32_t jresult = (int32_t)env->CallIntMethod(jrandom, nextMethod, 27);
+
+            // getting result of our implementation
+            int32_t result = random->Next(27);
+
+            // comparing results
+            FString message = FString::Printf(TEXT("Result iteration %i.%i - Seed %l"), i, j, seed);
+            TestEqual(message, result, jresult);
+        }
     }
 
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomNextTestNegative1Seed, "MC_UE4.JavaPort.Random Next Test From Negative 1 Seed", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
-bool FJavaRandomNextTestNegative1Seed::RunTest(const FString& Parameters)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextInt, "MC_UE4.JavaPort.Random Test Next Int", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FJavaRandomTestNextInt::RunTest(const FString& Parameters)
 {
-    const int NUM_RESULTS = 5;
-    const int NUM_BITS = 27;
-    int64_t expectedSeeds[] = {
-        281449761806738,
-        75700622266165,
-        123725706106780,
-        3453692097911,
-        154258039025078
-    };
-    int64_t expectedResults[] = {
-        36096869,
-        58997014,
-        1646848,
-        73555964,
-        88863475
-    };
+    // getting Java definitions
+    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
+    jclass randomCls = env->FindClass("java/util/Random");
+    jmethodID randomCtor = env->GetMethodID(randomCls, "<init>", "(J)V");
+    jmethodID nextIntMethod = env->GetMethodID(randomCls, "nextInt", "()I");
 
-    UJavaRandom* random = NewObject<UJavaRandom>();
-    random->SetSeed(-1);
-
-    for (int i = 0; i < NUM_RESULTS; ++i)
+    // comparing results from various seeds
+    for (int i = 0; i < NUM_SAMPLES; ++i)
     {
-        TestEqual("Seed " + FString::FromInt(i + 1), (long long)random->m_seed, (long long)expectedSeeds[i]);
-        int64_t result = random->Next(NUM_BITS);
-        TestEqual(TEXT("Result ") + FString::FromInt(i + 1), (long long)result, (long long)expectedResults[i]);
+        // getting random seed
+        int seed = rand();
+
+        // constructing java and unreal versions of random class
+        jobject jrandom = env->NewObject(randomCls, randomCtor, (jlong)seed);
+        UJavaRandom* random = NewObject<UJavaRandom>();
+        random->SetSeed(seed);
+
+        // testing results under subsequent calls
+        for(int j = 0; j < 10; ++j)
+        {
+            // getting result of java random
+            int32_t jresult = (int32_t)env->CallIntMethod(jrandom, nextIntMethod);
+
+            // getting result of our implementation
+            int32_t result = random->NextInt();
+
+            // comparing results
+            FString message = FString::Printf(TEXT("Result iteration %i.%i - Seed %l"), i, j, seed);
+            TestEqual(message, result, jresult);
+        }
     }
 
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextIntPositive1Seed, "MC_UE4.JavaPort.Random Test Next Int From Positive 1 Seed", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
-bool FJavaRandomTestNextIntPositive1Seed::RunTest(const FString& Parameters)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextIntBounds, "MC_UE4.JavaPort.Random Test Next Int With Bounds", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FJavaRandomTestNextIntBounds::RunTest(const FString& Parameters)
 {
-    // expected result from NextDouble if seed is 1
-    const int NUM_RESULTS = 5;
-    int32_t expectedResults[] = {
-        -1155869325,
-        431529176,
-        1761283695,
-        1749940626,
-        892128508
-    };
+    // getting Java definitions
+    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
+    jclass randomCls = env->FindClass("java/util/Random");
+    jmethodID randomCtor = env->GetMethodID(randomCls, "<init>", "(J)V");
+    jmethodID nextIntMethod = env->GetMethodID(randomCls, "nextInt", "(I)I");
 
-    UJavaRandom* random = NewObject<UJavaRandom>();
-    random->SetSeed(1);
-
-    for (int i = 0; i < NUM_RESULTS; ++i)
+    // comparing results from various seeds
+    for (int i = 0; i < NUM_SAMPLES; ++i)
     {
-        int32_t result = random->NextInt();
-        TestEqual(TEXT("Result ") + FString::FromInt(i + 1), result, expectedResults[i]);
+        // getting random seed
+        int seed = rand();
+
+        // constructing java and unreal versions of random class
+        jobject jrandom = env->NewObject(randomCls, randomCtor, (jlong)seed);
+        UJavaRandom* random = NewObject<UJavaRandom>();
+        random->SetSeed(seed);
+
+        // testing results under subsequent calls
+        for (int j = 0; j < 10; ++j)
+        {
+            // generating bound to pass to this function
+            int bound = rand() % 255;
+
+            // getting result of java random
+            int32_t jresult = (int32_t)env->CallIntMethod(jrandom, nextIntMethod, (jint)bound);
+
+            // getting result of our implementation
+            int32_t result = random->NextInt(bound);
+
+            // comparing results
+            FString message = FString::Printf(TEXT("Result iteration %i.%i - Seed %l"), i, j, seed);
+            TestEqual(message, result, jresult);
+        }
     }
 
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextIntBoundsPositive1Seed, "MC_UE4.JavaPort.Random Test Next Int With Bounds From Positive 1 Seed", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
-bool FJavaRandomTestNextIntBoundsPositive1Seed::RunTest(const FString& Parameters)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextDouble, "MC_UE4.JavaPort.Random Test Next Double", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FJavaRandomTestNextDouble::RunTest(const FString& Parameters)
 {
-    // expected result from NextDouble if seed is 1
-    const int NUM_RESULTS = 4;
-    int32_t expectedResults[] = {
-        0,
-        5,
-        163,
-        10598022
-    };
+    // getting Java definitions
+    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
+    jclass randomCls = env->FindClass("java/util/Random");
+    jmethodID randomCtor = env->GetMethodID(randomCls, "<init>", "(J)V");
+    jmethodID nextDoubleMethod = env->GetMethodID(randomCls, "nextDouble", "()D");
 
-    UJavaRandom* random = NewObject<UJavaRandom>();
-    random->SetSeed(1);
-
-    int32_t results[] = {
-        random->NextInt(0),
-        random->NextInt(10),
-        random->NextInt(0xFF),
-        random->NextInt(24858395)
-    };
-
-    for (int i = 0; i < NUM_RESULTS; ++i)
+    // comparing results from various seeds
+    for (int i = 0; i < NUM_SAMPLES; ++i)
     {
-        TestEqual(TEXT("Result ") + FString::FromInt(i + 1), results[i], expectedResults[i]);
-    }
+        // getting random seed
+        int seed = rand();
 
-    return true;
-}
+        // constructing java and unreal versions of random class
+        jobject jrandom = env->NewObject(randomCls, randomCtor, (jlong)seed);
+        UJavaRandom* random = NewObject<UJavaRandom>();
+        random->SetSeed(seed);
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextDoublePositive1Seed, "MC_UE4.JavaPort.Random Test Next Double From Positive 1 Seed", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
-bool FJavaRandomTestNextDoublePositive1Seed::RunTest(const FString& Parameters)
-{
-    // expected result from NextDouble if seed is 1
-    const int NUM_RESULTS = 5;
-    double expectedResults[] = {
-        0.7308781907032909,
-        0.41008081149220166,
-        0.20771484130971707,
-        0.3327170559595112,
-        0.9677559094241207
-    };
+        // testing results under subsequent calls
+        for (int j = 0; j < 10; ++j)
+        {
+            // getting result of java random
+            double jresult = (double)env->CallDoubleMethod(jrandom, nextDoubleMethod);
 
-    UJavaRandom* random = NewObject<UJavaRandom>();
-    random->SetSeed(1);
+            // getting result of our implementation
+            double result = random->NextDouble();
 
-    for(int i = 0; i < NUM_RESULTS; ++i)
-    {
-        double result = random->NextDouble();
-        TestEqual(TEXT("Result ") + FString::FromInt(i + 1), result, expectedResults[i]);
+            // comparing results
+            FString message = FString::Printf(TEXT("Result iteration %d.%d - Seed %l"), i, j, seed);
+            TestEqual(message, result, jresult);
+        }
     }
 
     return true;
@@ -154,23 +165,36 @@ bool FJavaRandomTestNextDoublePositive1Seed::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextLongPositive1Seed, "MC_UE4.JavaPort.Random Test Next Long From Positive 1 Seed", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FJavaRandomTestNextLongPositive1Seed::RunTest(const FString& Parameters)
 {
-    // expected result from NextDouble if seed is 1
-    const int NUM_RESULTS = 5;
-    int64_t expectedResults[] = {
-        -4964420948893066024,
-        7564655870752979346,
-        3831662765844904176,
-        6137546356583794141,
-        -594798593157429144
-    };
+    // getting Java definitions
+    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
+    jclass randomCls = env->FindClass("java/util/Random");
+    jmethodID randomCtor = env->GetMethodID(randomCls, "<init>", "(J)V");
+    jmethodID nextLongMethod = env->GetMethodID(randomCls, "nextLong", "()J");
 
-    UJavaRandom* random = NewObject<UJavaRandom>();
-    random->SetSeed(1);
-
-    for (int i = 0; i < NUM_RESULTS; ++i)
+    // comparing results from various seeds
+    for (int i = 0; i < NUM_SAMPLES; ++i)
     {
-        int64_t result = random->NextLong();
-        TestEqual(TEXT("Result ") + FString::FromInt(i + 1), result, expectedResults[i]);
+        // getting random seed
+        int seed = rand();
+
+        // constructing java and unreal versions of random class
+        jobject jrandom = env->NewObject(randomCls, randomCtor, (jlong)seed);
+        UJavaRandom* random = NewObject<UJavaRandom>();
+        random->SetSeed(seed);
+
+        // testing results under subsequent calls
+        for (int j = 0; j < 10; ++j)
+        {
+            // getting result of java random
+            int64_t jresult = (int64_t)env->CallLongMethod(jrandom, nextLongMethod);
+
+            // getting result of our implementation
+            int64_t result = random->NextLong();
+
+            // comparing results
+            FString message = FString::Printf(TEXT("Result iteration %d.%d - Seed %l"), i, j, seed);
+            TestEqual(message, result, jresult);
+        }
     }
 
     return true;
