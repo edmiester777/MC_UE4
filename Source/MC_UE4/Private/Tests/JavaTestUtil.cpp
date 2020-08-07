@@ -30,14 +30,15 @@ JNIEnv* JavaTestUtil::GetEnv()
 FString JavaTestUtil::GetMCPClasspath()
 {
     FString projectDir = FPaths::ProjectDir();
+    FString fullPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*projectDir);
     FString classpath = FPaths::Combine(
-        projectDir,
-        "third-party",
-        "mcp-reborn",
-        "build",
-        "classes",
-        "java",
-        "main"
+        fullPath,
+        TEXT("third-party"),
+        TEXT("mcp-reborn"),
+        TEXT("build"),
+        TEXT("classes"),
+        TEXT("java"),
+        TEXT("main")
     );
     return classpath;
 }
