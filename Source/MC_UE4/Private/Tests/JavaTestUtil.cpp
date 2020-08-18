@@ -1,6 +1,6 @@
 #include "JavaTestUtil.h"
 
-JavaTestUtil* JavaTestUtil::instance()
+JavaTestUtil* JavaTestUtil::Instance()
 {
     static JavaTestUtil* instance = nullptr;
 

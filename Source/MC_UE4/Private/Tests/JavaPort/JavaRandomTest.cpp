@@ -1,31 +1,55 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CoreMinimal.h"
-#include <JavaPort/JavaRandom.h>
-#include <bitset>
+#include "JavaRandomTest.h"
 #include <Tests/JavaTestUtil.h>
 
 #define NUM_SAMPLES 1000
+
+void InitJavaRandomJVM(long seed, jclass& jrandomCls, jobject& jrandom)
+{
+    // getting jvm environment
+    JNIEnv* env = JavaTestUtil::Instance()->GetEnv();
+
+    // finding class
+    jrandomCls = env->FindClass("java/util/Random");
+
+    // geting constructor on class
+    jmethodID jrandomCtor = env->GetMethodID(jrandomCls, "<init>", "(J)V");
+
+    // constructing object
+    jrandom = env->NewObject(jrandomCls, jrandomCtor, (jlong)seed);
+}
+
+UJavaRandom* InitJavaRandom(long seed)
+{
+    UJavaRandom* random = NewObject<UJavaRandom>();
+    random->SetSeed(seed);
+    return random;
+}
+
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomNextTest, "MC_UE4.JavaPort.Random Next Test", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FJavaRandomNextTest::RunTest(const FString& Parameters)
 {
     // Getting java definitions
-    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
-    jclass randomCls = env->FindClass("java/util/Random");
-    jmethodID randomCtor = env->GetMethodID(randomCls, "<init>", "(J)V");
-    jmethodID nextMethod = env->GetMethodID(randomCls, "next", "(I)I");
+    JNIEnv* env = JavaTestUtil::Instance()->GetEnv();
 
     // comparing results from various seeds
     for(int i = 0; i < NUM_SAMPLES; ++i) {
         // getting random seed value
         int seed = rand();
 
+        // initializing jvm random class
+        jclass jrandomCls;
+        jobject jrandom;
+        InitJavaRandomJVM(seed, jrandomCls, jrandom);
+
+        // getting the next method
+        jmethodID nextMethod = env->GetMethodID(jrandomCls, "next", "(I)I");
+
         // constructing java and unreal versions of random class
-        jobject jrandom = env->NewObject(randomCls, randomCtor, (jlong)seed);
-        UJavaRandom* random = NewObject<UJavaRandom>();
-        random->SetSeed((int64_t)seed);
+        UJavaRandom* random = InitJavaRandom(seed);
 
         // testing results under subsequent calls
         for(int j = 0; j < 10; ++j)
@@ -48,11 +72,9 @@ bool FJavaRandomNextTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextInt, "MC_UE4.JavaPort.Random Test Next Int", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FJavaRandomTestNextInt::RunTest(const FString& Parameters)
 {
-    // getting Java definitions
-    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
-    jclass randomCls = env->FindClass("java/util/Random");
-    jmethodID randomCtor = env->GetMethodID(randomCls, "<init>", "(J)V");
-    jmethodID nextIntMethod = env->GetMethodID(randomCls, "nextInt", "()I");
+    // getting JVM env
+    JNIEnv* env = JavaTestUtil::Instance()->GetEnv();
+
 
     // comparing results from various seeds
     for (int i = 0; i < NUM_SAMPLES; ++i)
@@ -61,9 +83,13 @@ bool FJavaRandomTestNextInt::RunTest(const FString& Parameters)
         int seed = rand();
 
         // constructing java and unreal versions of random class
-        jobject jrandom = env->NewObject(randomCls, randomCtor, (jlong)seed);
-        UJavaRandom* random = NewObject<UJavaRandom>();
-        random->SetSeed(seed);
+        jclass jrandomCls;
+        jobject jrandom;
+        InitJavaRandomJVM(seed, jrandomCls, jrandom);
+        UJavaRandom* random = InitJavaRandom(seed);
+
+        // getting the nextInt method from the JVM
+        jmethodID nextIntMethod = env->GetMethodID(jrandomCls, "nextInt", "()I");
 
         // testing results under subsequent calls
         for(int j = 0; j < 10; ++j)
@@ -87,10 +113,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextIntBounds, "MC_UE4.JavaPort.
 bool FJavaRandomTestNextIntBounds::RunTest(const FString& Parameters)
 {
     // getting Java definitions
-    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
-    jclass randomCls = env->FindClass("java/util/Random");
-    jmethodID randomCtor = env->GetMethodID(randomCls, "<init>", "(J)V");
-    jmethodID nextIntMethod = env->GetMethodID(randomCls, "nextInt", "(I)I");
+    JNIEnv* env = JavaTestUtil::Instance()->GetEnv();
 
     // comparing results from various seeds
     for (int i = 0; i < NUM_SAMPLES; ++i)
@@ -99,9 +122,13 @@ bool FJavaRandomTestNextIntBounds::RunTest(const FString& Parameters)
         int seed = rand();
 
         // constructing java and unreal versions of random class
-        jobject jrandom = env->NewObject(randomCls, randomCtor, (jlong)seed);
-        UJavaRandom* random = NewObject<UJavaRandom>();
-        random->SetSeed(seed);
+        jclass jrandomCls;
+        jobject jrandom;
+        InitJavaRandomJVM(seed, jrandomCls, jrandom);
+        UJavaRandom* random = InitJavaRandom(seed);
+
+        // getting the nextInt method from JVM
+        jmethodID nextIntMethod = env->GetMethodID(jrandomCls, "nextInt", "(I)I");
 
         // testing results under subsequent calls
         for (int j = 0; j < 10; ++j)
@@ -128,10 +155,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextDouble, "MC_UE4.JavaPort.Ran
 bool FJavaRandomTestNextDouble::RunTest(const FString& Parameters)
 {
     // getting Java definitions
-    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
-    jclass randomCls = env->FindClass("java/util/Random");
-    jmethodID randomCtor = env->GetMethodID(randomCls, "<init>", "(J)V");
-    jmethodID nextDoubleMethod = env->GetMethodID(randomCls, "nextDouble", "()D");
+    JNIEnv* env = JavaTestUtil::Instance()->GetEnv();
 
     // comparing results from various seeds
     for (int i = 0; i < NUM_SAMPLES; ++i)
@@ -140,9 +164,11 @@ bool FJavaRandomTestNextDouble::RunTest(const FString& Parameters)
         int seed = rand();
 
         // constructing java and unreal versions of random class
-        jobject jrandom = env->NewObject(randomCls, randomCtor, (jlong)seed);
-        UJavaRandom* random = NewObject<UJavaRandom>();
-        random->SetSeed(seed);
+        jclass jrandomCls;
+        jobject jrandom;
+        InitJavaRandomJVM(seed, jrandomCls, jrandom);
+        jmethodID nextDoubleMethod = env->GetMethodID(jrandomCls, "nextDouble", "()D");
+        UJavaRandom* random = InitJavaRandom(seed);
 
         // testing results under subsequent calls
         for (int j = 0; j < 10; ++j)
@@ -166,10 +192,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJavaRandomTestNextLongPositive1Seed, "MC_UE4.J
 bool FJavaRandomTestNextLongPositive1Seed::RunTest(const FString& Parameters)
 {
     // getting Java definitions
-    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
-    jclass randomCls = env->FindClass("java/util/Random");
-    jmethodID randomCtor = env->GetMethodID(randomCls, "<init>", "(J)V");
-    jmethodID nextLongMethod = env->GetMethodID(randomCls, "nextLong", "()J");
+    JNIEnv* env = JavaTestUtil::Instance()->GetEnv();
 
     // comparing results from various seeds
     for (int i = 0; i < NUM_SAMPLES; ++i)
@@ -178,9 +201,11 @@ bool FJavaRandomTestNextLongPositive1Seed::RunTest(const FString& Parameters)
         int seed = rand();
 
         // constructing java and unreal versions of random class
-        jobject jrandom = env->NewObject(randomCls, randomCtor, (jlong)seed);
-        UJavaRandom* random = NewObject<UJavaRandom>();
-        random->SetSeed(seed);
+        jclass jrandomCls;
+        jobject jrandom;
+        InitJavaRandomJVM(seed, jrandomCls, jrandom);
+        jmethodID nextLongMethod = env->GetMethodID(jrandomCls, "nextLong", "()J");
+        UJavaRandom* random = InitJavaRandom(seed);
 
         // testing results under subsequent calls
         for (int j = 0; j < 10; ++j)

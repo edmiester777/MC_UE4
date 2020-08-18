@@ -39,7 +39,7 @@ private:
 	};
 	const double F2 = 0.5 * (__SIMPLEX_SQRT_3 - 1.0);
 	const double G2 = (3.0 - __SIMPLEX_SQRT_3) / 6.0;
-	int32_t m_randoms[512];
+	int32_t m_permutations[512];
 	double m_xo;
 	double m_yo;
 	double m_zo;
@@ -122,5 +122,6 @@ private:
 
 	friend class FSimplexNoiseGeneratorTestInit;
 	friend class FSimplexNoiseGeneratorTestProcessGrad;
+	friend class FSimplexNoiseGeneratorTestGetContrib;
 	friend class FSimplexNoiseGeneratorTestGetPermutValue;
 };

@@ -14,7 +14,7 @@ private:
     JNIEnv* m_env;
 
 public:
-    static JavaTestUtil* instance();
+    static JavaTestUtil* Instance();
     JavaTestUtil();
     ~JavaTestUtil();
     JNIEnv* GetEnv();

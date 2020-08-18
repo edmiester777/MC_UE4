@@ -28,33 +28,32 @@ void USimplexNoiseGenerator::Init(UJavaRandom &seed)
     m_yo = seed.NextDouble() * 256.0;
     m_zo = seed.NextDouble() * 256.0;
 
-    for (int i = 0; i < 256; m_randoms[i] = i++);
+    for (int i = 0; i < 256; m_permutations[i] = i++);
 
     // shuffling randoms
     for(int l = 0; l < 256; ++l)
     {
         uint32_t j = seed.NextInt(256 - l);
-        uint32_t k = m_randoms[l];
-        m_randoms[l] = m_randoms[j + l];
-        m_randoms[j + l] = k;
+        uint32_t k = m_permutations[l];
+        m_permutations[l] = m_permutations[j + l];
+        m_permutations[j + l] = k;
     }
 }
 
 double USimplexNoiseGenerator::GetValue(double x, double y)
 {
     double d0 = (x + y) * F2;
+    int i = FMath::FloorToInt(x + d0);
+    int j = FMath::FloorToInt(y + d0);
 
-    double i = FMath::FloorToDouble(x + d0);
-    double j = FMath::FloorToDouble(y + d0);
-
-    double d1 = (i + j) * G2;
-    double d2 = i - d1;
-    double d3 = j - d1;
+    double d1 = (double)(i + j) * G2;
+    double d2 = (double)i - d1;
+    double d3 = (double)j - d1;
     double d4 = x - d2;
     double d5 = y - d3;
-
-    int k, l;
-    if(d4 > d5)
+    int k;
+    int l;
+    if (d4 > d5)
     {
         k = 1;
         l = 0;
@@ -70,8 +69,8 @@ double USimplexNoiseGenerator::GetValue(double x, double y)
     double d8 = d4 - 1.0 + 2.0 * G2;
     double d9 = d5 - 1.0 + 2.0 * G2;
 
-    int i1 = (int)i & 0xff;
-    int j1 = (int)j & 0xff;
+    int i1 = i & 255;
+    int j1 = j & 255;
 
     int k1 = GetPermutValue(i1 + GetPermutValue(j1)) % 12;
     int l1 = GetPermutValue(i1 + k + GetPermutValue(j1 + l)) % 12;
@@ -198,7 +197,7 @@ double USimplexNoiseGenerator::ProcessGrad(
 
 int USimplexNoiseGenerator::GetPermutValue(int permutIndex)
 {
-    return m_randoms[permutIndex & 255];
+    return m_permutations[permutIndex & 255];
 }
 
 double USimplexNoiseGenerator::GetContrib(int gradIndex, double x, double y, double z, double offset)

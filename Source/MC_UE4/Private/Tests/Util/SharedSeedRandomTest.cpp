@@ -8,7 +8,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSharedSeedRandomTestSetBaseChunkSeed, "MC_UE4.
 bool FSharedSeedRandomTestSetBaseChunkSeed::RunTest(const FString& Parameters)
 {
     // getting JVM env
-    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
+    JNIEnv* env = JavaTestUtil::Instance()->GetEnv();
 
     // Getting reference to java class
     jclass ssrCls = env->FindClass("net/minecraft/util/SharedSeedRandom");
@@ -44,7 +44,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSharedSeedRandomTestSetDecorationSeed, "MC_UE4
 bool FSharedSeedRandomTestSetDecorationSeed::RunTest(const FString& Parameters)
 {
     // getting JVM env
-    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
+    JNIEnv* env = JavaTestUtil::Instance()->GetEnv();
 
     // Getting reference to java class
     jclass ssrCls = env->FindClass("net/minecraft/util/SharedSeedRandom");
@@ -81,7 +81,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSharedSeedRandomTestSetFeatureSeed, "MC_UE4.Ut
 bool FSharedSeedRandomTestSetFeatureSeed::RunTest(const FString& Parameters)
 {
     // getting JVM env
-    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
+    JNIEnv* env = JavaTestUtil::Instance()->GetEnv();
 
     // Getting reference to java class
     jclass ssrCls = env->FindClass("net/minecraft/util/SharedSeedRandom");
@@ -118,7 +118,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSharedSeedRandomTestSetLargeFeatureSeed, "MC_U
 bool FSharedSeedRandomTestSetLargeFeatureSeed::RunTest(const FString& Parameters)
 {
     // getting JVM env
-    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
+    JNIEnv* env = JavaTestUtil::Instance()->GetEnv();
 
     // Getting reference to java class
     jclass ssrCls = env->FindClass("net/minecraft/util/SharedSeedRandom");
@@ -155,7 +155,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSharedSeedRandomTestSetLargeFeatureSeedWithSal
 bool FSharedSeedRandomTestSetLargeFeatureSeedWithSalt::RunTest(const FString& Parameters)
 {
     // getting JVM env
-    JNIEnv* env = JavaTestUtil::instance()->GetEnv();
+    JNIEnv* env = JavaTestUtil::Instance()->GetEnv();
 
     // Getting reference to java class
     jclass ssrCls = env->FindClass("net/minecraft/util/SharedSeedRandom");
