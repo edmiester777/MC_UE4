@@ -32,6 +32,14 @@ bool JavaTestUtil::HasError()
     return (bool)GetEnv()->ExceptionCheck();
 }
 
+void JavaTestUtil::ClearError()
+{
+    if (HasError())
+    {
+        GetEnv()->ExceptionClear();
+    }
+}
+
 FString JavaTestUtil::DescribeError()
 {
     if (!HasError())
@@ -89,7 +97,7 @@ FString JavaTestUtil::DescribeError()
     FString fstack(UTF8_TO_TCHAR(cstack));
 
     // cleanup
-    GetEnv()->ExceptionClear();
+    ClearError();
     GetEnv()->ReleaseStringUTFChars(stack, cstack);
     GetEnv()->DeleteLocalRef(printwriter);
     GetEnv()->DeleteLocalRef(stringwriter);
@@ -127,7 +135,7 @@ FString JavaTestUtil::GetMCPClasspath()
     // Checking and joining dependencies
     if (jarFiles.Num() == 0)
     {
-        UE_LOG(LogTemp, Warning, TEXT("We've detected 0 dependencies, have you bootstrapped the project?"));
+        UE_LOG(LogTemp, Warning, TEXT("[JVM] We've detected 0 dependencies, have you bootstrapped the project?"));
     }
     else
     {
@@ -138,6 +146,8 @@ FString JavaTestUtil::GetMCPClasspath()
         }
     }
 
+    UE_LOG(LogTemp, Display, TEXT("[JVM] Classpath set with %d dependencies."), jarFiles.Num());
+
     return classpath;
 }
 
@@ -147,10 +157,11 @@ void JavaTestUtil::InitJVM()
     {
         FString cpOpt = "-Djava.class.path=" + GetMCPClasspath();
         JavaVMInitArgs vmArgs;
-        JavaVMOption vmOptions[3];
+        JavaVMOption vmOptions[4];
         vmOptions[0].optionString = TCHAR_TO_ANSI(*cpOpt);
         vmOptions[1].optionString = "-Xms1m";
         vmOptions[2].optionString = "-Xmx1g";
+        vmOptions[3].optionString = "-XX:-OmitStackTraceInFastThrow";
         vmArgs.version = JNI_VERSION_1_8;
         vmArgs.nOptions = 1;
         vmArgs.options = vmOptions;
@@ -163,7 +174,7 @@ void JavaTestUtil::InitJVM()
         {
             m_jvm = nullptr;
             m_env = nullptr;
-            UE_LOG(LogTemp, Error, TEXT("Failed to initialize JVM."));
+            UE_LOG(LogTemp, Fatal, TEXT("Failed to initialize JVM."));
             return;
         }
 
@@ -204,11 +215,11 @@ void JavaTestUtil::FindAllClasspathJars(FString dir, TArray<FString>& files)
 
         if (file.EndsWith("-sources.jar"))
         {
-            UE_LOG(LogTemp, Display, TEXT("[ClasspathSearch] Filtering out source jar - %s"), *file)
+            UE_LOG(LogTemp, Display, TEXT("[JVM/ClasspathSearch] Filtering out source jar - %s"), *file)
         }
         else
         {
-            UE_LOG(LogTemp, Display, TEXT("[ClasspathSearch] Found jar dependency - %s"), *file);
+            UE_LOG(LogTemp, Display, TEXT("[JVM/ClasspathSearch] Found jar dependency - %s"), *file);
             files.Add(file);
         }
     }

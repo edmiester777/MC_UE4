@@ -4,6 +4,15 @@
 #include "CoreMinimal.h"
 #include <jni.h>
 
+#define JNI_CLEAR_ERROR JavaTestUtil::Instance()->ClearError()
+#define JNI_TEST_CHECK_AND_PRINT_ERROR \
+    if (JavaTestUtil::Instance()->HasError()) \
+    { \
+        FString exc = JavaTestUtil::Instance()->DescribeError(); \
+        UE_LOG(LogTemp, Error, TEXT("%s"), *exc); \
+        return false; \
+    }
+
 /**
  * This class is a utility class for interfacing with JVM and minecraft source
  * files from unreal code.
@@ -24,6 +33,11 @@ public:
      * execution.
      */
     bool HasError();
+
+    /**
+     * If an error exists, clear it from the VM.
+     */
+    void ClearError();
 
     /**
      * If an error has occurred during prior execution,

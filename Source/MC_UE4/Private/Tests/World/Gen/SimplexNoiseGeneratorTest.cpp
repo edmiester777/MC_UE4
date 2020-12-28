@@ -32,6 +32,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSimplexNoiseGeneratorTestInit, "MC_UE4.World.G
 bool FSimplexNoiseGeneratorTestInit::RunTest(const FString& Parameters)
 {
     // setting up environment
+    JNI_CLEAR_ERROR;
     JNIEnv* env = JavaTestUtil::Instance()->GetEnv();
 
     for(int i = 0; i < NUM_SAMPLES; ++i)
@@ -44,6 +45,8 @@ bool FSimplexNoiseGeneratorTestInit::RunTest(const FString& Parameters)
         jobject jgen;
         InitSimplexNoiseGeneratorJVM(seed, jgenCls, jgen);
         USimplexNoiseGenerator* gen = InitSimplexNoiseGenerator(seed);
+
+        JNI_TEST_CHECK_AND_PRINT_ERROR;
 
         // Getting links to fields
         jfieldID jxoField = env->GetFieldID(jgenCls, "xo", "D");
@@ -84,6 +87,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSimplexNoiseGeneratorTestGetValue2d, "MC_UE4.W
 bool FSimplexNoiseGeneratorTestGetValue2d::RunTest(const FString& Parameters)
 {
     // getting JVM environment
+    JNI_CLEAR_ERROR;
     JNIEnv* env = JavaTestUtil::Instance()->GetEnv();
 
     // performing a number of samples
@@ -99,18 +103,15 @@ bool FSimplexNoiseGeneratorTestGetValue2d::RunTest(const FString& Parameters)
         jmethodID jgetValue = env->GetMethodID(jgenCls, "getValue", "(DD)D");
         USimplexNoiseGenerator* gen = InitSimplexNoiseGenerator(seed);
 
+        JNI_TEST_CHECK_AND_PRINT_ERROR;
+
         // getting values
         double x = (double)rand();
         double y = (double)rand();
         double jresult = env->CallDoubleMethod(jgen, jgetValue, x, y);
         double result = gen->GetValue(x, y);
 
-        if (JavaTestUtil::Instance()->HasError())
-        {
-            FString exc = JavaTestUtil::Instance()->DescribeError();
-            UE_LOG(LogTemp, Error, TEXT("%s"), *exc);
-            return false;
-        }
+        JNI_TEST_CHECK_AND_PRINT_ERROR;
 
         FString message = FString::Printf(TEXT("Result seed=%i, x=%f, y=%f"), seed, x, y);
         TestEqual(message, result, jresult);
