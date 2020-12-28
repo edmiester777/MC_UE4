@@ -4,11 +4,13 @@
 #include "CoreMinimal.h"
 #include <jni.h>
 
-#define JNI_CLEAR_ERROR JavaTestUtil::Instance()->ClearError()
+#define JTI_INSTANCE JavaTestUtil::Instance()
+#define JNI_ENV JTI_INSTANCE->GetEnv()
+#define JNI_CLEAR_ERROR JTI_INSTANCE->ClearError()
 #define JNI_TEST_CHECK_AND_PRINT_ERROR \
-    if (JavaTestUtil::Instance()->HasError()) \
+    if (JTI_INSTANCE->HasError()) \
     { \
-        FString exc = JavaTestUtil::Instance()->DescribeError(); \
+        FString exc = JTI_INSTANCE->DescribeError(); \
         UE_LOG(LogTemp, Error, TEXT("%s"), *exc); \
         return false; \
     }
