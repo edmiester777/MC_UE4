@@ -110,6 +110,34 @@ FString JavaTestUtil::GetMCPClasspath()
         TEXT("java"),
         TEXT("main")
     );
+
+    // getting gradle jars
+    TArray<FString> jarFiles;
+    FindAllClasspathJars(
+        FPaths::Combine(
+            fullPath,
+            TEXT("third-party"),
+            TEXT("mcp-reborn"),
+            TEXT("gradle_install"),
+            TEXT("caches")
+        ),
+        jarFiles
+    );
+
+    // Checking and joining dependencies
+    if (jarFiles.Num() == 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("We've detected 0 dependencies, have you bootstrapped the project?"));
+    }
+    else
+    {
+        for (int i = 0; i < jarFiles.Num(); ++i)
+        {
+            classpath += ";";
+            classpath += jarFiles[i];
+        }
+    }
+
     return classpath;
 }
 
@@ -155,5 +183,33 @@ void JavaTestUtil::DestroyJVM()
         m_jvm->DestroyJavaVM();
         m_jvm = nullptr;
         m_env = nullptr;
+    }
+}
+
+void JavaTestUtil::FindAllClasspathJars(FString dir, TArray<FString>& files)
+{
+    TArray<FString> tmpFiles;
+    IFileManager::Get().FindFilesRecursive(
+        tmpFiles,
+        *dir,
+        *FString("*.jar"),
+        true,
+        false,
+        false
+    );
+
+    for (int i = 0; i < tmpFiles.Num(); ++i)
+    {
+        FString file = tmpFiles[i];
+
+        if (file.EndsWith("-sources.jar"))
+        {
+            UE_LOG(LogTemp, Display, TEXT("[ClasspathSearch] Filtering out source jar - %s"), *file)
+        }
+        else
+        {
+            UE_LOG(LogTemp, Display, TEXT("[ClasspathSearch] Found jar dependency - %s"), *file);
+            files.Add(file);
+        }
     }
 }

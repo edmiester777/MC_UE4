@@ -40,4 +40,16 @@ private:
     static FString GetMCPClasspath();
     void InitJVM();
     void DestroyJVM();
+
+    /**
+     * Recursively find all possible classpaths (from gradle) to load
+     * with the JVM environment.
+     * 
+     * @param dir Current directory.
+     * @param[out] files A list of jar files to add to classpath.
+     */
+    static void FindAllClasspathJars(
+        FString dir,
+        TArray<FString>& files
+    );
 };
