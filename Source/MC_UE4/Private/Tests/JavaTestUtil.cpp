@@ -27,6 +27,76 @@ JNIEnv* JavaTestUtil::GetEnv()
     return m_env;
 }
 
+bool JavaTestUtil::HasError()
+{
+    return (bool)GetEnv()->ExceptionCheck();
+}
+
+FString JavaTestUtil::DescribeError()
+{
+    if (!HasError())
+        return FString();
+
+    jthrowable exc = GetEnv()->ExceptionOccurred();
+    jclass throwableCls = GetEnv()->FindClass("java/lang/Throwable");
+
+    // StringWriter setup
+    jclass stringwriterCls = GetEnv()->FindClass("java/io/StringWriter");
+    jobject stringwriter = GetEnv()->NewObject(
+        stringwriterCls,
+        GetEnv()->GetMethodID(
+            stringwriterCls,
+            "<init>",
+            "()V"
+        )
+    );
+
+    // PrintWriter setup
+    jclass printwriterCls = GetEnv()->FindClass("java/io/PrintWriter");
+    jobject printwriter = GetEnv()->NewObject(
+        printwriterCls,
+        GetEnv()->GetMethodID(
+            printwriterCls,
+            "<init>",
+            "(Ljava/io/Writer;)V"
+        ),
+        stringwriter
+    );
+
+    // Writing exception message to PrintWriter
+    GetEnv()->CallVoidMethod(
+        exc,
+        GetEnv()->GetMethodID(
+            throwableCls,
+            "printStackTrace",
+            "(Ljava/io/PrintWriter;)V"
+        ),
+        printwriter
+    );
+
+    // Getting written string
+    jstring stack = (jstring)GetEnv()->CallObjectMethod(
+        stringwriter,
+        GetEnv()->GetMethodID(
+            stringwriterCls,
+            "toString",
+            "()Ljava/lang/String;"
+        )
+    );
+
+    // converting
+    const char* cstack = GetEnv()->GetStringUTFChars(stack, NULL);
+    FString fstack(UTF8_TO_TCHAR(cstack));
+
+    // cleanup
+    GetEnv()->ExceptionClear();
+    GetEnv()->ReleaseStringUTFChars(stack, cstack);
+    GetEnv()->DeleteLocalRef(printwriter);
+    GetEnv()->DeleteLocalRef(stringwriter);
+
+    return fstack;
+}
+
 FString JavaTestUtil::GetMCPClasspath()
 {
     FString projectDir = FPaths::ProjectDir();

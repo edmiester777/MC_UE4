@@ -19,6 +19,23 @@ public:
     ~JavaTestUtil();
     JNIEnv* GetEnv();
 
+    /**
+     * Check if an error has occurred during prior
+     * execution.
+     */
+    bool HasError();
+
+    /**
+     * If an error has occurred during prior execution,
+     * return a formatted message to describe the exception.
+     * 
+     * This will also clear the existing exception.
+     * 
+     * @see JavaTestUtil::HasError()
+     * @seealso http://journals.ecs.soton.ac.uk/java/tutorial/native1.1/implementing/error.html
+     */
+    FString DescribeError();
+
 private:
     static FString GetMCPClasspath();
     void InitJVM();

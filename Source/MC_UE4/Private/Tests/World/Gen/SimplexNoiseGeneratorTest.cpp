@@ -105,6 +105,13 @@ bool FSimplexNoiseGeneratorTestGetValue2d::RunTest(const FString& Parameters)
         double jresult = env->CallDoubleMethod(jgen, jgetValue, x, y);
         double result = gen->GetValue(x, y);
 
+        if (JavaTestUtil::Instance()->HasError())
+        {
+            FString exc = JavaTestUtil::Instance()->DescribeError();
+            UE_LOG(LogTemp, Error, TEXT("%s"), *exc);
+            return false;
+        }
+
         FString message = FString::Printf(TEXT("Result seed=%i, x=%f, y=%f"), seed, x, y);
         TestEqual(message, result, jresult);
     }
