@@ -1,6 +1,6 @@
 #include "CoreMinimal.h"
 #include <Util/SharedSeedRandom.h>
-#include <Tests/JavaTestUtil.h>
+#include <TestUtil/JavaTestUtil.h>
 #include "SharedSeedRandomTest.h"
 
 #define NUM_SAMPLES 1000

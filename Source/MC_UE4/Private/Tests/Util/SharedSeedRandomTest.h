@@ -1,6 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
-#include <Tests/JavaTestUtil.h>
+#include <TestUtil/JavaTestUtil.h>
 #include <Util/SharedSeedRandom.h>
 
 /**

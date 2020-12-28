@@ -2,7 +2,7 @@
 
 
 #include "JavaRandomTest.h"
-#include <Tests/JavaTestUtil.h>
+#include <TestUtil/JavaTestUtil.h>
 
 #define NUM_SAMPLES 1000
 

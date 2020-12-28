@@ -1,6 +1,5 @@
 #include "SimplexNoiseGeneratorTest.h"
 #include <Tests/JavaPort/JavaRandomTest.h>
-#include "..\..\Util\SharedSeedRandomTest.h"
 
 #define NUM_SAMPLES 1000
 
