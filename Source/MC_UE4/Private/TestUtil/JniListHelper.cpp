@@ -1,21 +1,26 @@
 #include <TestUtil/JniListHelper.h>
 
-jintArray JniListHelper::ToIntArray(TArray<int> ints)
+jobjectArray JniListHelper::ToIntegerArray(TArray<int> ints)
 {
+	// getting java info
+	jclass jintCls = JNI_ENV->FindClass("java/lang/Integer");
+	jmethodID jintCtor = JNI_ENV->GetMethodID(jintCls, "<init>", "(I)V");
+	jobject objDefault = JNI_ENV->NewObject(jintCls, jintCtor, (jint)0);
+
 	// allocating the jvm array
-	jintArray arr = JNI_ENV->NewIntArray(ints.Num());
+	jobjectArray arr = JNI_ENV->NewObjectArray(ints.Num(), jintCls, objDefault);
 
 	// setting list items
 	for (int i = 0; i < ints.Num(); ++i)
 	{
-		jint intVal = ints[i];
-		JNI_ENV->SetIntArrayRegion(arr, i, 1, &intVal);
+		jobject index = JNI_ENV->NewObject(jintCls, jintCtor, (jint)ints[i]);
+		JNI_ENV->SetObjectArrayElement(arr, i, index);
 	}
 
 	return arr;
 }
 
-jobject JniListHelper::ToList(jintArray ints)
+jobject JniListHelper::ToList(jobjectArray ints)
 {
 	// using Arrays.asList(T ... a) builtin to convert.
 	jclass arraysCls = JNI_ENV->FindClass("java/util/Arrays");
@@ -36,7 +41,7 @@ jobject JniListHelper::ToList(jintArray ints)
 jobject JniListHelper::ToList(TArray<int> ints)
 {
 	// converting list
-	jintArray arr = ToIntArray(ints);
+	jobjectArray arr = ToIntegerArray(ints);
 	jobject list = ToList(arr);
 
 	// cleanup

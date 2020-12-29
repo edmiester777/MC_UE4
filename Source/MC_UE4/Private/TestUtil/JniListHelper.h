@@ -9,14 +9,14 @@ public:
 	 * 
 	 * @param ints List of integers to put into jvm.
 	 */
-	static jintArray ToIntArray(TArray<int> ints);
+	static jobjectArray ToIntegerArray(TArray<int> ints);
 
 	/**
 	 * Convert a java int array to a java List<int>.
 	 * 
-	 * @param ints Existing int array to convert.
+	 * @param ints Existing Integer array to convert.
 	 */
-	static jobject ToList(jintArray ints);
+	static jobject ToList(jobjectArray ints);
 
 	/**
 	 * Convert an TArray<int> to a java List<int>.

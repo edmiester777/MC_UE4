@@ -1,101 +1,168 @@
 #include "CoreMinimal.h"
-#include <Util/SharedSeedRandom.h>
 #include <World/Gen/PerlinNoiseGenerator.h>
+#include "PerlinNoiseGeneratorTest.h"
+#include <Tests/Util/SharedSeedRandomTest.h>
+#include <TestUtil/JniListHelper.h>
+
+#define NUM_SAMPLES 5
 
 TArray<int> PerlinNoiseTest_GetIntArr()
 {
     TArray<int> arr;
-    arr.Add(12);
-    arr.Add(15);
-    arr.Add(19);
-    arr.Add(49);
-    arr.Add(890);
-    arr.Add(900);
+
+    for (int i = 0; i < 15; ++i)
+    {
+        arr.Add(rand());
+    }
+
     return arr;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPerlinNoiseGeneratorTestInit, "MC_UE4.World.Gen.PerlinNoiseGenerator Test Initialization of Perlin Noise Generator.", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+void InitPerlinNoiseGeneratorJVM(long seed, TArray<int> octaves, jclass& jgenCls, jobject& jgenerator)
+{
+    // getting JVM definitions
+    jclass ssrCls;
+    jobject ssr;
+    InitSharedSeedRandomJVM(seed, ssrCls, ssr);
+    jgenCls = JNI_ENV->FindClass("net/minecraft/world/gen/PerlinNoiseGenerator");
+    jmethodID genCtor = JNI_ENV->GetMethodID(
+        jgenCls,
+        "<init>",
+        "("
+            "Lnet/minecraft/util/SharedSeedRandom;"
+            "Ljava/util/List;"
+        ")V"
+    );
+
+    // constructing noise generator
+    jobject intList = JniListHelper::ToList(octaves);
+    jgenerator = JNI_ENV->NewObject(
+        jgenCls,
+        genCtor,
+        ssr,
+        intList
+    );
+}
+
+UPerlinNoiseGenerator* InitPerlinNoiseGenerator(long seed, TArray<int> octaves)
+{
+    USharedSeedRandom* ssr = InitSharedSeedRandom(seed);
+
+    UPerlinNoiseGenerator* gen = NewObject<UPerlinNoiseGenerator>();
+    gen->Init(*ssr, octaves);
+
+    return gen;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPerlinNoiseGeneratorTestInit, "MC_UE4.World.Gen.PerlinNoiseGenerator.Test Initialization of Perlin Noise Generator.", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FPerlinNoiseGeneratorTestInit::RunTest(const FString& Parameters)
 {
-    const double expectedXO = 2.4228908772695546E-268;
-    const double expectedYO = 8.452712498170644E270;
+    JNI_CLEAR_ERROR;
 
-    TArray<int> expectedNonZeroNoiseLevels;
-    expectedNonZeroNoiseLevels.Add(0);
-    expectedNonZeroNoiseLevels.Add(10);
-    expectedNonZeroNoiseLevels.Add(851);
-    expectedNonZeroNoiseLevels.Add(881);
-    expectedNonZeroNoiseLevels.Add(885);
-    expectedNonZeroNoiseLevels.Add(888);
+    const char* clsFieldX = "field_227462_b_";
+    const char* clsFieldY = "field_227463_c_";
 
-    USharedSeedRandom* seed = NewObject<USharedSeedRandom>();
-    seed->SetSeed(1);
-    UPerlinNoiseGenerator* gen = NewObject<UPerlinNoiseGenerator>();
-    gen->Init(*seed, PerlinNoiseTest_GetIntArr());
+    long seed = rand();
+    TArray<int> ints = PerlinNoiseTest_GetIntArr();
 
-    TestEqual("XO Value", gen->m_xo, expectedXO);
-    TestEqual("YO Value", gen->m_yo, expectedYO);
+    // setting up JVM objects
+    jclass jgenCls;
+    jobject jgen;
+    InitPerlinNoiseGeneratorJVM(seed, ints, jgenCls, jgen);
+    UPerlinNoiseGenerator* gen = InitPerlinNoiseGenerator(seed, ints);
+    JNI_TEST_CHECK_AND_PRINT_ERROR;
 
-    // checking that noise levels were generated correctly.
-    for(int i = 0; i < gen->m_noiseLevels.Num(); ++i)
-    {
-        USimplexNoiseGenerator* nptr = gen->m_noiseLevels[i];
-        if (expectedNonZeroNoiseLevels.Contains(i))
-            TestNotEqual(TEXT("Expected Non-Zero pointer value at index ") + FString::FromInt(i), (void *)nptr, (void *)nullptr);
-        else
-            TestEqual(TEXT("Expected zero pointer value at index ") + FString::FromInt(i), (void *)nptr, (void *)nullptr);
-    }
+    // getting fields from java objects
+    jfieldID xField = JNI_ENV->GetFieldID(jgenCls, clsFieldX, "D");
+    jfieldID yField = JNI_ENV->GetFieldID(jgenCls, clsFieldY, "D");
+    double jXVal = JNI_ENV->GetDoubleField(jgen, xField);
+    double jYVal = JNI_ENV->GetDoubleField(jgen, yField);
+
+    // asserting
+    TestEqual(TEXT("X field not equal."), gen->m_xo, jXVal);
+    TestEqual(TEXT("Y field not equal."), gen->m_yo, jYVal);
 
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPerlinNoiseGeneratorTestNoiseAtXY, "MC_UE4.World.Gen.PerlinNoiseGenerator Test NoiseAt with XY function.", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPerlinNoiseGeneratorTestNoiseAtXY, "MC_UE4.World.Gen.PerlinNoiseGenerator.Test NoiseAt with XY function.", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FPerlinNoiseGeneratorTestNoiseAtXY::RunTest(const FString& Parameters)
 {
-    const int NUM_RESULTS = 5;
-    const double expectedResults[NUM_RESULTS] = {
-        0.2073906103127365,
-        0.11315628294392532,
-        0.23598397136313534,
-        -0.17770651932035997,
-        0.2359227138577469
-    };
+    JNI_CLEAR_ERROR;
 
-    USharedSeedRandom* seed = NewObject<USharedSeedRandom>();
-    seed->SetSeed(1);
-    UPerlinNoiseGenerator* gen = NewObject<UPerlinNoiseGenerator>();
-    gen->Init(*seed, PerlinNoiseTest_GetIntArr());
-
-    for(int i = 0; i < NUM_RESULTS; ++i)
+    for (int i = 0; i < NUM_SAMPLES; ++i)
     {
-        double result = gen->NoiseAt(i, i * 10, true);
-        TestEqual("Result of NoiseAt", result, expectedResults[i]);
+        // setting up params
+        long seed = rand();
+        TArray<int> octaves = PerlinNoiseTest_GetIntArr();
+        double x = FMath::RandRange(0.0f, 100000000.0f);
+        double y = FMath::RandRange(0.0f, 100000000.0f);
+        bool useNoiseOffsets = FMath::RandBool();
+
+        // constructing generators
+        jclass jgenCls;
+        jobject jgen;
+        InitPerlinNoiseGeneratorJVM(seed, octaves, jgenCls, jgen);
+        UPerlinNoiseGenerator* gen = InitPerlinNoiseGenerator(seed, octaves);
+        JNI_TEST_CHECK_AND_PRINT_ERROR;
+
+        // getting relevant method ID
+        jmethodID noiseAt = JNI_ENV->GetMethodID(
+            jgenCls,
+            "noiseAt",
+            "(DDZ)D"
+        );
+        
+        // calling functions
+        double jval = JNI_ENV->CallDoubleMethod(jgen, noiseAt, (jdouble)x, (jdouble)y, (jboolean)useNoiseOffsets);
+        double val = gen->NoiseAt(x, y, useNoiseOffsets);
+        JNI_TEST_CHECK_AND_PRINT_ERROR;
+        TestEqual(TEXT("Results not equal."), val, jval);
     }
 
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPerlinNoiseGeneratorTestNoiseAtXYZ, "MC_UE4.World.Gen.PerlinNoiseGenerator Test NoiseAt with XYZ function.", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPerlinNoiseGeneratorTestNoiseAtXYZ, "MC_UE4.World.Gen.PerlinNoiseGenerator.Test NoiseAt with XYZ function.", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FPerlinNoiseGeneratorTestNoiseAtXYZ::RunTest(const FString& Parameters)
 {
-    const int NUM_RESULTS = 5;
-    const double expectedResults[NUM_RESULTS] = {
-        0.1140648356720051,
-        0.062235955619158935,
-        0.12979118424972444,
-        -0.09773858562619799,
-        0.1297574926217608
-    };
+    JNI_CLEAR_ERROR;
 
-    USharedSeedRandom* seed = NewObject<USharedSeedRandom>();
-    seed->SetSeed(1);
-    UPerlinNoiseGenerator* gen = NewObject<UPerlinNoiseGenerator>();
-    gen->Init(*seed, PerlinNoiseTest_GetIntArr());
-
-    for (int i = 0; i < NUM_RESULTS; ++i)
+    for (int i = 0; i < NUM_SAMPLES; ++i)
     {
-        double result = gen->NoiseAt(i, i * 10, i, i * 10);
-        TestEqual("Result of NoiseAt", result, expectedResults[i]);
+        // setting up params
+        long seed = rand();
+        TArray<int> octaves = PerlinNoiseTest_GetIntArr();
+        double x = FMath::RandRange(0.0f, 100000000.0f);
+        double y = FMath::RandRange(0.0f, 100000000.0f);
+        double z = FMath::RandRange(0.0f, 100000000.0f);
+
+        // constructing generators
+        jclass jgenCls;
+        jobject jgen;
+        InitPerlinNoiseGeneratorJVM(seed, octaves, jgenCls, jgen);
+        UPerlinNoiseGenerator* gen = InitPerlinNoiseGenerator(seed, octaves);
+        JNI_TEST_CHECK_AND_PRINT_ERROR;
+
+        // getting relevant method ID
+        jmethodID noiseAt = JNI_ENV->GetMethodID(
+            jgenCls,
+            "noiseAt",
+            "(DDDD)D"
+        );
+
+        // calling functions
+        double jval = JNI_ENV->CallDoubleMethod(
+            jgen, 
+            noiseAt, 
+            (jdouble)x, 
+            (jdouble)y,
+            (jdouble)z,
+            (jdouble)0.0
+        );
+        double val = gen->NoiseAt(x, y, z, 0.0);
+        JNI_TEST_CHECK_AND_PRINT_ERROR;
+        TestEqual(TEXT("Results not equal."), val, jval);
     }
 
     return true;
