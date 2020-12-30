@@ -2,9 +2,11 @@
 
 
 #include "JavaRandom.h"
+#include <Util/TimeUtil.h>
 
 UJavaRandom::UJavaRandom()
 {
+    SetSeed(TimeUtil::NanoTime());
 }
 
 UJavaRandom::~UJavaRandom()
