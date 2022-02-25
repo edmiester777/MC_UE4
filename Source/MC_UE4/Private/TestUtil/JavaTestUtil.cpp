@@ -1,4 +1,4 @@
-#include "JavaTestUtil.h"
+#include <TestUtil/JavaTestUtil.h>
 
 JavaTestUtil* JavaTestUtil::Instance()
 {

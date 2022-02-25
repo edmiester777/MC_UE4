@@ -1,5 +1,5 @@
-#include "CoreMinimal.h"
 #include <Util/SharedSeedRandom.h>
+#include "CoreMinimal.h"
 #include <TestUtil/JavaTestUtil.h>
 #include "SharedSeedRandomTest.h"
 
