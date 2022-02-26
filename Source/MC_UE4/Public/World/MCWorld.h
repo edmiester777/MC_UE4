@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "../Wrappers/ServerWrapper.h"
 
 /**
  * 
@@ -12,4 +13,7 @@ class MC_UE4_API MCWorld
 public:
 	MCWorld();
 	~MCWorld();
+
+private:
+	UServerWrapper* m_server;
 };

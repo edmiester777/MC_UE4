@@ -1,3 +1,4 @@
+#include "SharedSeedRandomTest.h"
 #include <Util/SharedSeedRandom.h>
 #include "CoreMinimal.h"
 #include <TestUtil/JavaTestUtil.h>

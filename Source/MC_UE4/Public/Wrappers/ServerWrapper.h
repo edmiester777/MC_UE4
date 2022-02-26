@@ -14,4 +14,10 @@ UCLASS()
 class MC_UE4_API UServerWrapper : public UObject
 {
 	GENERATED_BODY()
+public:
+	UServerWrapper();
+	virtual ~UServerWrapper() override;
+
+private:
+	void Bootstrap();
 };

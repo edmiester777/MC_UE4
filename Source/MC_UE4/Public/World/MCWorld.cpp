@@ -5,6 +5,7 @@
 
 MCWorld::MCWorld()
 {
+	m_server = NewObject<UServerWrapper>();
 }
 
 MCWorld::~MCWorld()

@@ -1,5 +1,5 @@
-#include <TestUtil/JavaTestUtil.h>
 #include <TestUtil/JniListHelper.h>
+#include <TestUtil/JavaTestUtil.h>
 
 jobjectArray JniListHelper::ToIntegerArray(TArray<int> ints)
 {

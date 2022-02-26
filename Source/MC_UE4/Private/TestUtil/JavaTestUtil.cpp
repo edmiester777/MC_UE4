@@ -105,6 +105,16 @@ FString JavaTestUtil::DescribeError()
     return fstack;
 }
 
+void JavaTestUtil::AttachThread()
+{
+    m_jvm->AttachCurrentThread((void**) &m_env, NULL);
+}
+
+void JavaTestUtil::DetachThread()
+{
+    m_jvm->DetachCurrentThread();
+}
+
 FString JavaTestUtil::GetMCPClasspath()
 {
     FString projectDir = FPaths::ProjectDir();
@@ -156,13 +166,14 @@ void JavaTestUtil::InitJVM()
     if(m_jvm == nullptr)
     {
         FString cpOpt = "-Djava.class.path=" + GetMCPClasspath();
+        std::string s = TCHAR_TO_ANSI(*cpOpt);
         JavaVMInitArgs vmArgs;
         JavaVMOption vmOptions[4];
-        vmOptions[0].optionString = TCHAR_TO_ANSI(*cpOpt);
+        vmOptions[0].optionString = (char*)s.c_str();
         vmOptions[1].optionString = "-Xms1m";
         vmOptions[2].optionString = "-Xmx1g";
-        vmOptions[3].optionString = "-XX:-OmitStackTraceInFastThrow";
-        vmArgs.version = JNI_VERSION_1_8;
+        vmOptions[3].optionString = "-verbose:jni";
+        vmArgs.version = JNI_VERSION_10;
         vmArgs.nOptions = 1;
         vmArgs.options = vmOptions;
         vmArgs.ignoreUnrecognized = true;
@@ -213,7 +224,7 @@ void JavaTestUtil::FindAllClasspathJars(FString dir, TArray<FString>& files)
     {
         FString file = tmpFiles[i];
 
-        if (file.EndsWith("-sources.jar"))
+        if (file.EndsWith("-sources.jar") || file.Contains("log4j") && file.Contains("2.11"))
         {
             UE_LOG(LogTemp, Display, TEXT("[JVM/ClasspathSearch] Filtering out source jar - %s"), *file)
         }

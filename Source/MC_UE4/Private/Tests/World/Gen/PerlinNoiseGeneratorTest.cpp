@@ -1,6 +1,5 @@
-#include "CoreMinimal.h"
-#include <World/Gen/PerlinNoiseGenerator.h>
 #include "PerlinNoiseGeneratorTest.h"
+#include "CoreMinimal.h"
 #include <Tests/Util/SharedSeedRandomTest.h>
 #include <TestUtil/JniListHelper.h>
 

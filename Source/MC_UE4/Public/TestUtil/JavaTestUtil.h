@@ -14,6 +14,15 @@
         UE_LOG(LogTemp, Error, TEXT("%s"), *exc); \
         return false; \
     }
+#define JNI_GET_CLASS(cls) JNI_ENV->FindClass(cls)
+#define _JNI_GET_METHOD(jniMethod, jcls, method, sig) \
+    JNI_ENV->jniMethod(jcls, method, sig)
+#define JNI_GET_STATIC_METHOD(jcls, method, sig) \
+    _JNI_GET_METHOD(GetStaticMethodID, jcls, method, sig)
+#define _JNI_CALL_METHOD(jniMethod, ...) \
+    JNI_ENV->jniMethod(__VA_ARGS__)
+#define JNI_CALL_STATIC_VOID_METHOD(jcls, jmethod, ...) \
+    _JNI_CALL_METHOD(CallStaticVoidMethod, jcls, jmethod, __VA_ARGS__)
 
 /**
  * This class is a utility class for interfacing with JVM and minecraft source
@@ -51,6 +60,16 @@ public:
      * @seealso http://journals.ecs.soton.ac.uk/java/tutorial/native1.1/implementing/error.html
      */
     FString DescribeError();
+
+    /**
+     * Attach this thread to JVM for execution.
+     */
+    void AttachThread();
+
+    /**
+     * Detach this thread from JVM
+     */
+    void DetachThread();
 
 private:
     static FString GetMCPClasspath();
