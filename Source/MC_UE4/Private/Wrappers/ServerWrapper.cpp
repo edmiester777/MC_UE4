@@ -6,9 +6,10 @@
 
 UServerWrapper::UServerWrapper()
 {
+	JVMThreadLock lck;
 	FString serverRoot = FPaths::ProjectIntermediateDir();
 	serverRoot = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*serverRoot);
-	jstring jserverRoot = JNI_ENV->NewString((jchar*)TCHAR_TO_ANSI(*serverRoot), serverRoot.Len());
+	jstring jserverRoot = JNI_ENV->NewStringUTF(TCHAR_TO_ANSI(*serverRoot));
 	jclass jSimpleServerCls = JNI_GET_CLASS("ue/test/SimpleServer");
 	JNI_CALL_STATIC_VOID_METHOD(
 		jSimpleServerCls,
@@ -16,12 +17,18 @@ UServerWrapper::UServerWrapper()
 		jserverRoot
 	);
 
-
 	if (JavaTestUtil::Instance()->HasError())
 	{
 		FString stack = JavaTestUtil::Instance()->DescribeError();
 		UE_LOG(LogTemp, Fatal, TEXT("Failed to start backend server: %s"), *stack);
 	}
+
+	// getting running dedicated server
+	m_dedicatedServer = JNI_SIMPLE_GET_STATIC_OBJECT_FIELD(
+		jSimpleServerCls,
+		"SERVER",
+		"Lue/test/SimpleServer;"
+	);
 }
 
 UServerWrapper::~UServerWrapper()

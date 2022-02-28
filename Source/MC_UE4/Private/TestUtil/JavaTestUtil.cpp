@@ -188,7 +188,7 @@ FString JavaTestUtil::GetMCPClasspath()
     }
 
     // compiling test java
-    FString compileCommand = "javac -d " + FPaths::Combine(depsDir, "classes") + " -cp \"" + classpath + "\" " + FPaths::Combine(fullPath, "java", "*.java");
+    FString compileCommand = "javac -source 17 -d " + FPaths::Combine(depsDir, "classes") + " -cp \"" + classpath + "\" " + FPaths::Combine(fullPath, "java", "*.java");
     system(TCHAR_TO_ANSI(*compileCommand));
 
 
@@ -261,7 +261,10 @@ void JavaTestUtil::FindAllClasspathJars(FString dir, TArray<FString>& files)
     {
         FString file = tmpFiles[i];
 
-        if (file.EndsWith("-sources.jar") || file.Contains("log4j") && file.Contains("2.11"))
+        bool filter = file.EndsWith("-sources.jar")
+            || file.Contains("log4j") && file.Contains("2.11")
+            || file.Contains("fastutil") && !file.Contains("8.5.6");
+        if (filter)
         {
             UE_LOG(LogTemp, Display, TEXT("[JVM/ClasspathSearch] Filtering out source jar - %s"), *file)
         }

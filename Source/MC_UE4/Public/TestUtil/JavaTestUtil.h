@@ -25,15 +25,31 @@
     JNI_ENV->Call##type##Method(cls, method, __VA_ARGS__)
 #define JNI_CALL_STATIC_VOID_METHOD(cls, method, ...) \
     _JNI_CALL_METHOD(StaticVoid, cls, method, __VA_ARGS__)
+#define JNI_CALL_STATIC_OBJECT_METHOD(cls, method, ...) \
+    _JNI_CALL_METHOD(StaticObject, cls, method, __VA_ARGS__)
 
 #define _JNI_GET_FIELD_ID(type, cls, name, sig) \
     JNI_ENV->Get##type##FieldID(cls, name, sig)
-#define JNI_GET_STATIC_FIELD_ID(Static, cls, name, sig)
+#define JNI_GET_STATIC_FIELD_ID(cls, name, sig) \
+    _JNI_GET_FIELD_ID(Static, cls, name, sig)
 
 #define _JNI_GET_FIELD(type, cls, field) \
     JNI_ENV->Get##type##Field(cls, field)
 #define JNI_GET_STATIC_OBJECT_FIELD(cls, field) \
     _JNI_GET_FIELD(StaticObject, cls, field)
+#define JNI_GET_STATIC_INT_FIELD(cls, field) \
+    _JNI_GET_FIELD(StaticInt, cls, field)
+
+#define JNI_SIMPLE_GET_STATIC_OBJECT_FIELD(cls, name, sig) \
+    JNI_GET_STATIC_OBJECT_FIELD(cls, JNI_GET_STATIC_FIELD_ID(cls, name, sig))
+#define JNI_SIMPLE_GET_STATIC_INT_FIELD(cls, name) \
+    JNI_GET_STATIC_INT_FIELD(cls, JNI_GET_STATIC_FIELD_ID(cls, name, "I"))
+
+#define JNI_PRINT_IF_ERROR \
+    { \
+        if (JavaTestUtil::Instance()->HasError()) \
+            UE_LOG(LogTemp, Warning, TEXT("%s"), *JavaTestUtil::Instance()->DescribeError()); \
+    }
 
 /**
  * This class is a utility class for interfacing with JVM and minecraft source
