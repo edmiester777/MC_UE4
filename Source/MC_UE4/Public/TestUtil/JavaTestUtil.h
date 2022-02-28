@@ -15,14 +15,25 @@
         return false; \
     }
 #define JNI_GET_CLASS(cls) JNI_ENV->FindClass(cls)
-#define _JNI_GET_METHOD(jniMethod, jcls, method, sig) \
-    JNI_ENV->jniMethod(jcls, method, sig)
+#define _JNI_GET_METHOD(type, jcls, method, sig) \
+    JNI_ENV->Get##type##MethodID(jcls, method, sig)
 #define JNI_GET_STATIC_METHOD(jcls, method, sig) \
-    _JNI_GET_METHOD(GetStaticMethodID, jcls, method, sig)
-#define _JNI_CALL_METHOD(jniMethod, ...) \
-    JNI_ENV->jniMethod(__VA_ARGS__)
-#define JNI_CALL_STATIC_VOID_METHOD(jcls, jmethod, ...) \
-    _JNI_CALL_METHOD(CallStaticVoidMethod, jcls, jmethod, __VA_ARGS__)
+    _JNI_GET_METHOD(Static, jcls, method, sig)
+
+
+#define _JNI_CALL_METHOD(type, cls, method, ...) \
+    JNI_ENV->Call##type##Method(cls, method, __VA_ARGS__)
+#define JNI_CALL_STATIC_VOID_METHOD(cls, method, ...) \
+    _JNI_CALL_METHOD(StaticVoid, cls, method, __VA_ARGS__)
+
+#define _JNI_GET_FIELD_ID(type, cls, name, sig) \
+    JNI_ENV->Get##type##FieldID(cls, name, sig)
+#define JNI_GET_STATIC_FIELD_ID(Static, cls, name, sig)
+
+#define _JNI_GET_FIELD(type, cls, field) \
+    JNI_ENV->Get##type##Field(cls, field)
+#define JNI_GET_STATIC_OBJECT_FIELD(cls, field) \
+    _JNI_GET_FIELD(StaticObject, cls, field)
 
 /**
  * This class is a utility class for interfacing with JVM and minecraft source

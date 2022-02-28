@@ -1,5 +1,11 @@
 #include <TestUtil/JavaTestUtil.h>
 
+#ifdef WIN32
+#define CLASSPATH_SEPARATOR ";"
+#else
+#define CLASSPATH_SEPARATOR ":"
+#endif
+
 JavaTestUtil* JavaTestUtil::Instance()
 {
     static JavaTestUtil* instance = nullptr;
@@ -119,6 +125,7 @@ FString JavaTestUtil::GetMCPClasspath()
 {
     FString projectDir = FPaths::ProjectDir();
     FString fullPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*projectDir);
+    FString depsDir = FPaths::Combine(fullPath, "jars");
     FString classpath = FPaths::Combine(
         fullPath,
         TEXT("third-party"),
@@ -127,7 +134,10 @@ FString JavaTestUtil::GetMCPClasspath()
         TEXT("classes"),
         TEXT("java"),
         TEXT("main")
-    );
+    ) + CLASSPATH_SEPARATOR + FPaths::Combine(
+        depsDir,
+        "*"
+    ) + CLASSPATH_SEPARATOR + FPaths::Combine(depsDir, "classes");
 
     // getting gradle jars
     TArray<FString> jarFiles;
@@ -141,8 +151,24 @@ FString JavaTestUtil::GetMCPClasspath()
         ),
         jarFiles
     );
+    FindAllClasspathJars(
+        FPaths::Combine(
+            fullPath,
+            TEXT("third-party"),
+            TEXT("mcp-reborn"),
+            TEXT("gradle_install"),
+            TEXT("wrapper")
+        ),
+        jarFiles
+    );
 
     // Checking and joining dependencies
+    if (!IFileManager::Get().DirectoryExists(*depsDir))
+    {
+        IFileManager::Get().MakeDirectory(*depsDir);
+    }
+
+    FString outClasspath = classpath;
     if (jarFiles.Num() == 0)
     {
         UE_LOG(LogTemp, Warning, TEXT("[JVM] We've detected 0 dependencies, have you bootstrapped the project?"));
@@ -151,14 +177,25 @@ FString JavaTestUtil::GetMCPClasspath()
     {
         for (int i = 0; i < jarFiles.Num(); ++i)
         {
-            classpath += ";";
-            classpath += jarFiles[i];
+            FString dest = FPaths::Combine(depsDir, FPaths::GetCleanFilename(jarFiles[i]));
+            outClasspath += CLASSPATH_SEPARATOR + dest;
+            if (!IFileManager::Get().FileExists(*dest))
+            {
+                UE_LOG(LogTemp, Display, TEXT("[JVM] Copying dependency %s ..."), *jarFiles[i]);
+                IFileManager::Get().Copy(*dest, *jarFiles[i], false);
+            }
         }
     }
 
+    // compiling test java
+    FString compileCommand = "javac -d " + FPaths::Combine(depsDir, "classes") + " -cp \"" + classpath + "\" " + FPaths::Combine(fullPath, "java", "*.java");
+    system(TCHAR_TO_ANSI(*compileCommand));
+
+
+
     UE_LOG(LogTemp, Display, TEXT("[JVM] Classpath set with %d dependencies."), jarFiles.Num());
 
-    return classpath;
+    return outClasspath;
 }
 
 void JavaTestUtil::InitJVM()
@@ -170,8 +207,8 @@ void JavaTestUtil::InitJVM()
         JavaVMInitArgs vmArgs;
         JavaVMOption vmOptions[4];
         vmOptions[0].optionString = (char*)s.c_str();
-        vmOptions[1].optionString = "-Xms1m";
-        vmOptions[2].optionString = "-Xmx1g";
+        vmOptions[1].optionString = "-Xms1g";
+        vmOptions[2].optionString = "-Xmx4g";
         vmOptions[3].optionString = "-verbose:jni";
         vmArgs.version = JNI_VERSION_10;
         vmArgs.nOptions = 1;

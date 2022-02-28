@@ -19,5 +19,5 @@ public:
 	virtual ~UServerWrapper() override;
 
 private:
-	void Bootstrap();
+	jobject m_dedicatedServer;
 };

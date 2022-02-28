@@ -6,21 +6,24 @@
 
 UServerWrapper::UServerWrapper()
 {
-	JNI_ENV;
-	Bootstrap();
+	FString serverRoot = FPaths::ProjectIntermediateDir();
+	serverRoot = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*serverRoot);
+	jstring jserverRoot = JNI_ENV->NewString((jchar*)TCHAR_TO_ANSI(*serverRoot), serverRoot.Len());
+	jclass jSimpleServerCls = JNI_GET_CLASS("ue/test/SimpleServer");
+	JNI_CALL_STATIC_VOID_METHOD(
+		jSimpleServerCls,
+		JNI_GET_STATIC_METHOD(jSimpleServerCls, "main", "(Ljava/lang/String;)V"),
+		jserverRoot
+	);
+
+
+	if (JavaTestUtil::Instance()->HasError())
+	{
+		FString stack = JavaTestUtil::Instance()->DescribeError();
+		UE_LOG(LogTemp, Fatal, TEXT("Failed to start backend server: %s"), *stack);
+	}
 }
 
 UServerWrapper::~UServerWrapper()
 {
-}
-
-void UServerWrapper::Bootstrap()
-{
-	FString e = JavaTestUtil::Instance()->DescribeError();
-	JVMThreadLock lock;
-	jclass tst = JNI_GET_CLASS("java/util/Random");
-	jclass jBootstrapCls = JNI_GET_CLASS("net/minecraft/server/Bootstrap");
-	FString err = JavaTestUtil::Instance()->DescribeError();
-	jmethodID bootstrapMethod = JNI_GET_STATIC_METHOD(jBootstrapCls, "bootStrap", "()V");
-	JNI_CALL_STATIC_VOID_METHOD(jBootstrapCls, bootstrapMethod);
 }
